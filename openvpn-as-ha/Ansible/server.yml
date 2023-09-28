@@ -1,0 +1,95 @@
+---
+- name: OpenVPN Access Server Cluster
+  hosts: localhost
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Update apt cache and install required packages for repository setup
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - ca-certificates
+        - wget
+        - net-tools
+        - gnupg
+        - mysql-client
+        - libmysqlclient-dev
+        #- bridge-utils
+        #- dmidecode
+        #- libc6
+        #- libffi7
+        #- libgcc-s1
+        #- liblz4-1
+        #- liblzo2-2
+        #- libmariadb3
+        #- libpcap0.8
+        #- libssl3
+        #- libstdc++6
+        #- libsasl2-2
+        #- libsqlite3-0
+        #- net-tools
+        #- python3-pkg-resources
+        #- python3-migrate
+        #- python3-sqlalchemy
+        #- python3-mysqldb
+        #- python3-ldap3
+        #- sqlite3
+        #- zlib1g
+        #- python3-netaddr
+        #- python3-arrow
+        #- python3-lxml
+        #- python3-constantly
+        #- python3-hyperlink
+        #- python3-automat
+        #- python3-service-identity
+        #- python3-cffi
+        #- python3-defusedxml
+        #- libcap-ng0
+        #- libnl-3-200
+        #- libnl-genl-3-200
+
+    - name: Download the OpenVPN-AS Repo GPG Key
+      ansible.builtin.get_url:
+        url: https://as-repository.openvpn.net/as-repo-public.asc
+        dest: /etc/apt/trusted.gpg.d/as-repository.asc
+        force: true
+
+    - name: Add OpenVPN Access Server repository to sources.list
+      shell: echo "deb [arch=arm64 signed-by=/etc/apt/trusted.gpg.d/as-repository.asc] http://as-repository.openvpn.net/as/debian jammy main" > /etc/apt/sources.list.d/openvpn-as-repo.list
+
+    - name: Update apt cache after adding the repository
+      apt:
+        update_cache: yes
+
+    - name: Install OpenVPNAS
+      apt:
+      #This line defines the version of OpenVPN to install.
+        name: openvpn-as=2.12.0-2e834031-Ubuntu22
+      # Force a change!
+      # name: openvpn-as=2.11.3-af31575c-Ubuntu22
+       # allow_downgrade: true
+              
+    - name: Start and enable OpenVPN Access Server service
+      service:
+        name: openvpnas
+        state: started
+        enabled: yes
+
+    - name: Sleep for a few seconds to allow the service to start
+      pause:
+        seconds: 10
+
+    - name: Get initial access credentials
+      command: /usr/local/openvpn_as/bin/ovpn-init --batch
+      register: ovpn_init_result
+      ignore_errors: yes
+
+    - name: Print the initial access credentials
+      debug:
+        var: ovpn_init_result.stdout_lines

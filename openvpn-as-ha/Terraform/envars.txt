@@ -1,0 +1,4 @@
+export PROJECT_ID="REMOVED"
+export TF_USERNAME="$MYUSERNAME"
+export TF_PASSWORD="$MYPASSWORD"
+export TF_ADDRESS="https:/${PROJECT_ID}/terraform/state/tf_state"

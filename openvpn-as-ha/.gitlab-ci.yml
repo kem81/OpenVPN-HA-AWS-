@@ -1,0 +1,46 @@
+stages:
+  - validate
+  - plan
+  - apply
+image:
+  name: devopsinfra/docker-terragrunt:aws-tf-1.1.7-tg-0.36.6
+  entrypoint:
+    - '/usr/bin/env'
+    - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+variables:
+  AWS_ACCESS_KEY: $AWS_ACCESS_KEY_ID
+  AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+  MYSQL_DB_ADMIN: $MYSQL_DB_ADMIN
+  PROJECT_ID: $PROJECT_ID
+  TF_USERNAME: $TF_USERNAME
+  TF_PASSWORD: $TF_PASSWORD
+  TF_ADDRESS: "https://REMOVED FOR SECURITY/terraform/state/tf_state"
+
+before_script:
+  - cd Terraform
+  - rm -rf .terraform
+  #- terraform --version
+  #- aws --version
+  - terraform init -backend-config=address=${TF_ADDRESS} -backend-config=lock_address=${TF_ADDRESS}/lock -backend-config=unlock_address=${TF_ADDRESS}/lock -backend-config=username=${TF_USERNAME} -backend-config=password=${TF_PASSWORD} -backend-config=lock_method=POST -backend-config=unlock_method=DELETE -backend-config=retry_wait_min=5
+  #- aws sts get-caller-identity
+
+validate:
+  stage: validate
+  script:
+    - terraform validate
+plan:
+  stage: plan
+  script:
+    - terraform plan -out "planfile"
+  dependencies:
+    - validate
+  artifacts:
+    paths:
+      - planfile
+apply:
+  stage: apply
+  script:
+    - terraform apply -auto-approve
+  dependencies:
+    - plan
+  when: manual
