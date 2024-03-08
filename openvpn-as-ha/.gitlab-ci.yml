@@ -1,13 +1,14 @@
+#Defines the pipeline stages
 stages:
   - validate
   - plan
   - apply
-image:
+image: #Defines the container image to use to run the whole pipeline
   name: devopsinfra/docker-terragrunt:aws-tf-1.1.7-tg-0.36.6
   entrypoint:
     - '/usr/bin/env'
     - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-variables:
+variables: #Sets the varibale values to be used
   AWS_ACCESS_KEY: $AWS_ACCESS_KEY_ID
   AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
   MYSQL_DB_ADMIN: $MYSQL_DB_ADMIN
@@ -15,19 +16,20 @@ variables:
   TF_USERNAME: $TF_USERNAME
   TF_PASSWORD: $TF_PASSWORD
   TF_ADDRESS: "https://REMOVED FOR SECURITY/terraform/state/tf_state"
-
-before_script:
+#Initialises the TF backend in the S3 bucket
+before_script: 
   - cd Terraform
   - rm -rf .terraform
   #- terraform --version
   #- aws --version
   - terraform init -backend-config=address=${TF_ADDRESS} -backend-config=lock_address=${TF_ADDRESS}/lock -backend-config=unlock_address=${TF_ADDRESS}/lock -backend-config=username=${TF_USERNAME} -backend-config=password=${TF_PASSWORD} -backend-config=lock_method=POST -backend-config=unlock_method=DELETE -backend-config=retry_wait_min=5
   #- aws sts get-caller-identity
-
+#Validates the syntax/code in all the tf files
 validate:
   stage: validate
   script:
     - terraform validate
+#Runs the tf plan and outputs to a planfile to review for RFC/CAB for approval
 plan:
   stage: plan
   script:
@@ -37,6 +39,7 @@ plan:
   artifacts:
     paths:
       - planfile
+#Runs the TF apply but is a manual initiation
 apply:
   stage: apply
   script:

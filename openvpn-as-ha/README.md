@@ -13,5 +13,5 @@ Kemal Suleyman, DevOps Engineer
 
 ## Purpose
 
-To build a new, fully documented, tested and modern replacement for OpenVPN. the previous service, being single-headed is not resiliant and suffers from irregular update schedules.
+To build a new, fully documented, tested and modern replacement for OpenVPN. the previous service, being single-headed is not resiliant and suffers from irregular update shedules.
 The solution defined within this repo is build on OpenVPN-Access Server in a cluster configuration.

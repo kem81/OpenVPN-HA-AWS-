@@ -1,3 +1,4 @@
+# Creates a subnet for OpenVPN-AS in the first availability zone
 resource "aws_subnet" "prod_openvpn_subnet1" {
   vpc_id = var.vpc_id
   cidr_block = var.subnet1_cidr
@@ -9,6 +10,7 @@ resource "aws_subnet" "prod_openvpn_subnet1" {
   }
 }
 
+# Creates a subnet for OpenVPN-AS in the second availability zone
 resource "aws_subnet" "prod_openvpn_subnet2" {
   vpc_id = var.vpc_id
   cidr_block = var.subnet2_cidr
@@ -20,12 +22,14 @@ resource "aws_subnet" "prod_openvpn_subnet2" {
   }
 }
 
+# Creates an S3 bucket for storing Terraform backend
 resource "aws_db_subnet_group" "database" {
   name        = "${var.rds_instance_name}-subnet-group"
   description = "Terraform created RDS subnet group"
   subnet_ids  = ["${aws_subnet.prod_openvpn_subnet1.id}","${aws_subnet.prod_openvpn_subnet2.id}"]
 }
 
+# Uploads the Ansible playbook to the S3 bucket
 resource "aws_s3_bucket" "terraform-artifacts" {
   bucket = "terraform-devops-buildartifacts"
   tags = {
@@ -34,7 +38,6 @@ resource "aws_s3_bucket" "terraform-artifacts" {
     Client = "REMOVED FOR SECURITY"
   }
 }
-
 resource "aws_s3_object" "ansibleplaybook" {
   bucket = aws_s3_bucket.terraform-artifacts.id
   key    = "Ansible/server.yml"
@@ -42,6 +45,7 @@ resource "aws_s3_object" "ansibleplaybook" {
   etag   = filemd5("../Ansible/server.yml")
 }
 
+# Launches an EC2 instance for OpenVPN-AS in the first subnet
 resource "aws_instance" "openvpn-as-app1" {
   ami = var.ami_id
   instance_type = var.instance_type
@@ -56,6 +60,7 @@ resource "aws_instance" "openvpn-as-app1" {
   }
 }
 
+# Launches an EC2 instance for OpenVPN-AS in the second subnet
 resource "aws_instance" "openvpn-as-app2" {
   ami = var.ami_id
   instance_type = var.instance_type
@@ -70,24 +75,25 @@ resource "aws_instance" "openvpn-as-app2" {
   }
 }
 
+# Creates Elastic IP addresses for the EC2 instances
 resource "aws_eip" "elasticip1" {
   domain = "REMOVED FOR SECURITY"
 }
-
 resource "aws_eip" "elasticip2" {
   domain = "REMOVED FOR SECURITY"
 }
 
+# Assigns Elastic IPs to the EC2 instances
 resource "aws_eip_association" "openvpn-as-app-eip1" {
   instance_id   = aws_instance.openvpn-as-app1.id
   allocation_id = aws_eip.elasticip1.id
 }
-
 resource "aws_eip_association" "openvpn-as-app-eip2" {
   instance_id   = aws_instance.openvpn-as-app2.id
   allocation_id = aws_eip.elasticip2.id
 }
 
+#Creates the RDS Instance
 resource "aws_db_instance" "openvpn-as-rds" {
   engine = "mysql"
   engine_version = "8.0.33"
@@ -113,6 +119,7 @@ resource "aws_db_instance" "openvpn-as-rds" {
   }
 }
 
+#Creates the network security group and ingress rules
 resource "aws_security_group" "application" {
   name        = "openvpn-as-app-service-sg"
   vpc_id      = var.vpc_id
@@ -141,15 +148,7 @@ resource "aws_security_group" "application" {
     cidr_blocks = ["REMOVED FOR SECURITY"]
     description = "REMOVED FOR SECURITY"
   }
-
-  # ingress { #getting blocked by layer0
-  #   from_port   = REMOVED FOR SECURITY
-  #   to_port     = REMOVED FOR SECURITY
-  #   protocol    = "REMOVED FOR SECURITY"
-  #   cidr_blocks = ["REMOVED FOR SECURITY"]
-  #   description = "REMOVED FOR SECURITY"
-  # }
-  
+ 
   ingress {
     from_port   = REMOVED FOR SECURITY
     to_port     = REMOVED FOR SECURITY
@@ -179,6 +178,7 @@ resource "aws_security_group" "application" {
   }
 } 
 
+#Creates the network security group and ingress rules for the RDS Instance DB
 resource "aws_security_group" "database" {
 
   name        = "REMOVED FOR SECURITY"
@@ -205,11 +205,4 @@ resource "aws_security_group" "database" {
   lifecycle {
     create_before_destroy = true
   }
-} 
-#output "ec2_public_ips" {
-#  value = [for instance in module.ec2_instances: instance.public_ip]
-#}
-
-#output "rds_endpoint" {
-#  value = module.rds.rds_endpoint
-#}
+}

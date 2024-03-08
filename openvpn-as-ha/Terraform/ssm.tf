@@ -1,4 +1,4 @@
-# Define the SSM document for automatic updates
+# Defines the SSM document for automatic updates
 resource "aws_ssm_document" "automatic_updates" {
   name          = "OpenVPNautomatic-updates"
   document_type = "Command"
@@ -21,10 +21,11 @@ resource "aws_ssm_document" "automatic_updates" {
   })
 }
 
+#Associates the Ansible playbook with the ssm document
 resource "aws_ssm_association" "my_ssm_association" {
   name = "AWS-RunAnsiblePlaybook"
   association_name = "MyAnsiblePlaybook"
-  max_concurrency = "1"
+  max_concurrency = "1" # Specifies the maximum number of ec2 instances that can run the association at the same time
   parameters = {
     check = "False"
     extravars = "SSM=True Version=${aws_s3_object.ansibleplaybook.etag}"
