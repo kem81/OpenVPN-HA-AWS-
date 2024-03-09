@@ -11,6 +11,14 @@ These instances are strategically placed in distinct availability zones to enhan
 
 The backend application's data and configuration are stored in an AWS RDS SQL server, configured to operate in a multi-Availability Zone (AZ) setup to ensure redundancy and fault tolerance. Furthermore, the OpenVPN installation and updates are efficiently managed by Ansible, leveraging AWS Systems Manager (SSM). Backups are also scheduled and set using tags with AWS Backup service.
 
+
+![image](https://github.com/kem81/OpenVPN-HA-AWS-/assets/45514659/ee4d5007-8bd9-43d7-b513-64b1789afdfe)
+
+
+
+
+
+
 ## People
 
 Kemal Suleyman, DevOps Engineer
